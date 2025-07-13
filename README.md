@@ -1,10 +1,10 @@
-# NexDoc.xyz
+# NexDoc.dev
 
 A multi-tenant collaborative document creation platform that combines human expertise with AI-powered assistance to streamline report generation.
 
 ## Overview
 
-NexDoc.xyz enables organizations to create professional documents through real-time collaboration between team members and AI agents. The platform provides a seamless workflow from resource gathering to final document export.
+NexDoc.dev enables organizations to create professional documents through real-time collaboration between team members and AI agents. The platform provides a seamless workflow from resource gathering to final document export.
 
 ### Core Workflow
 

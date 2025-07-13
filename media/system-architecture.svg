@@ -3,7 +3,7 @@
   <rect width="1400" height="1000" fill="#f8f9fa"/>
   
   <!-- Title -->
-  <text x="700" y="30" text-anchor="middle" font-size="24" font-weight="bold" fill="#1a1a1a">NexDoc.xyz System Architecture</text>
+  <text x="700" y="30" text-anchor="middle" font-size="24" font-weight="bold" fill="#1a1a1a">NexDoc.dev System Architecture</text>
   
   <!-- External Services Layer -->
   <g id="external-layer">
