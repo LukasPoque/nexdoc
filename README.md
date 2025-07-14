@@ -54,7 +54,7 @@ See the complete system architecture diagram above showing the multi-tenant plat
 
 ### AI & Search
 - **LiteLLM** - Unified gateway for LLM providers with usage tracking
-- **R2R** - Advanced RAG platform deployed per-organization on K3S with auto-scaling
+- **R2R** - Advanced RAG platform with dedicated per-organization instances that scale to zero when inactive, managed by the Go backend for cost-effective multi-tenant isolation
 
 ### Storage
 - **PostgreSQL** - Application data and metadata
@@ -63,6 +63,9 @@ See the complete system architecture diagram above showing the multi-tenant plat
 ## Architecture Decisions
 
 - **Multi-tenancy via Header Injection** - Traefik middleware adds X-User and X-Organization headers for downstream services
-- **Per-Organization RAG Isolation** - Separate R2R instances ensure data privacy and performance isolation
+- **Shared Services with Application-Level Isolation** - Most services handle multi-tenancy through application logic
+- **Smart R2R Routing and Scaling** - Go backend routes AI requests to organization-specific R2R instances based on X-Organization headers, with KEDA auto-scaling that scales inactive instances to zero for cost optimization
+- **Per-Organization RAG Isolation** - Separate R2R instances ensure complete data privacy and performance isolation between organizations
 - **Collaborative Editing via TipTap Cloud** - Leverages proven infrastructure for real-time synchronization
-- **K3S for R2R Scaling** - Enables cost-effective scale-to-zero for inactive organizations
+- **Kubernetes-Native Deployment** - Full platform deployed on K3S cluster with auto-scaling and high availability
+- **K3D for Local Development** - Local Kubernetes development environment for testing cluster deployments

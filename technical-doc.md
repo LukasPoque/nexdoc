@@ -93,7 +93,9 @@ A unified interface for multiple LLM providers that abstracts API differences an
 **Repository:** https://github.com/BerriAI/litellm
 
 #### R2R (RAG Platform)
-A comprehensive Retrieval-Augmented Generation platform deployed as isolated instances per organization. Each instance includes:
+A comprehensive Retrieval-Augmented Generation platform deployed as completely isolated instances per organization. This architecture is critical for both data privacy and cost optimization:
+
+**Per-Organization Instance Features:**
 - Document ingestion pipeline with OCR and parsing
 - Vector database for semantic search (PostgreSQL + pgvector)
 - Hybrid search combining keyword and semantic matching
@@ -101,7 +103,14 @@ A comprehensive Retrieval-Augmented Generation platform deployed as isolated ins
 - Answer generation with citation tracking
 - Knowledge graph construction for complex queries
 
-R2R instances run on K3S with KEDA-based autoscaling, enabling scale-to-zero for cost optimization.
+**Intelligent Routing and Scaling:**
+- Go backend routes AI requests to the correct R2R instance based on X-Organization headers
+- KEDA-based autoscaling monitors request activity per organization
+- **Scale-to-zero capability**: Inactive organizations' R2R instances automatically scale to zero, eliminating compute costs
+- **On-demand scaling**: R2R instances spin up automatically when organizations become active
+- **Cost isolation**: Each organization only pays for their actual usage
+
+This separation ensures complete data isolation while optimizing infrastructure costs through intelligent scaling.
 
 **Repository:** https://github.com/SciPhi-AI/R2R
 
@@ -134,26 +143,29 @@ An S3-compatible object storage system providing:
 ### Infrastructure
 
 #### K3S
-A lightweight Kubernetes distribution optimized for edge computing and resource-constrained environments. It manages R2R instances with:
-- Namespace isolation per organization
-- KEDA for event-driven autoscaling
-- Service mesh for inter-service communication
-- Built-in ingress and load balancing
-- Persistent volume management
-- Resource quotas and limits
+A lightweight Kubernetes distribution that serves as the deployment platform for the entire NexDoc infrastructure. K3S provides:
+- **Full Platform Deployment** - All services deployed as Kubernetes workloads
+- **Shared Service Architecture** - Single instances of Backend, Keycloak, PostgreSQL, MinIO with application-level multi-tenancy
+- **Isolated R2R Instances** - Per-organization R2R deployments with namespace isolation
+- **KEDA Autoscaling** - Event-driven scaling for all services, particularly R2R instances
+- **Built-in Ingress** - Traefik integration for external traffic routing
+- **Persistent Storage** - StatefulSets for databases and object storage
+- **Service Discovery** - Native Kubernetes DNS for inter-service communication
+- **Resource Management** - Quotas and limits for cost optimization
 
 **Repository:** https://github.com/k3s-io/k3s
 **KEDA Repository:** https://github.com/kedacore/keda
 
-#### Docker Compose
-Used for local development and simple production deployments, providing:
-- Service orchestration and dependency management
-- Network isolation between services
-- Volume management for data persistence
-- Environment-specific configurations
-- Health checks and restart policies
+#### K3D
+A lightweight wrapper around K3S for local Kubernetes development, providing:
+- **Local Cluster Management** - Create/destroy K3S clusters for development
+- **Multi-node Testing** - Simulate production cluster topology locally
+- **Integrated Load Balancer** - Built-in ingress for testing external access
+- **Local Registry** - Fast container image distribution during development
+- **Volume Mounting** - Direct host path mounting for rapid iteration
+- **Port Forwarding** - Easy access to cluster services from localhost
 
-**Repository:** https://github.com/docker/compose
+**Repository:** https://github.com/k3d-io/k3d
 
 ### Observability (Future)
 
@@ -220,14 +232,16 @@ Usage-based billing infrastructure that will track:
 
 ### AI-Assisted Editing Flow
 1. User requests AI assistance within TipTap editor
-2. Frontend (via TipTap) sends request to backend context
-3. Backend routes to organization's R2R instance
-4. R2R performs retrieval from all files within the space
-5. R2R uses LLMs for search via LiteLLM
-6. LLM generates response with citations from space files
-7. Backend formats response for editor integration
-8. AI suggestions appear as tracked modifications in TipTap
-9. Users can accept, reject, or modify AI suggestions
+2. Frontend (via TipTap) sends request to backend with organization context
+3. **Smart Routing**: Backend uses X-Organization header to identify and route to the specific organization's R2R instance
+4. **Auto-scaling**: If R2R instance is scaled to zero, KEDA automatically spins it up (cold start ~30-60 seconds)
+5. R2R performs retrieval from all files within the space (organization's isolated data)
+6. R2R uses LLMs for search via LiteLLM
+7. LLM generates response with citations from space files
+8. Backend formats response for editor integration
+9. AI suggestions appear as tracked modifications in TipTap
+10. Users can accept, reject, or modify AI suggestions
+11. **Cost Optimization**: After period of inactivity, R2R instance scales back to zero
 
 ### Export and Access Flow
 1. User completes document and requests export
