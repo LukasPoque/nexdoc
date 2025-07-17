@@ -12,7 +12,7 @@ NexDoc.dev enables organizations to create professional documents through real-t
 
 2. **Unified File Explorer** - All imported resources are displayed in a unified file explorer, providing a single interface to manage content regardless of its original source.
 
-3. **Create Collaborative Spaces** - Users select relevant files to create a new "Space" - a collaborative workspace that can be shared with team members within the organization. Each space serves as a container for related resources and documents.
+3. **Create Collaborative Spaces** - Users select relevant files to create a new "Space" - a collaborative workspace that can be shared with team members within the organization of the user. Each space serves as a container for related resources and documents.
 
 4. **Document Creation** - Within a space, users can create new documents either from scratch or using uploaded blueprints/templates. The document editor provides a familiar interface enhanced with AI capabilities.
 
@@ -26,8 +26,7 @@ NexDoc.dev enables organizations to create professional documents through real-t
 
 ### Key Features
 
-- **Multi-tenant Architecture** - Complete isolation between organizations with dedicated resources
-- **Unified File Management** - Import from OneDrive, Google Drive, and local storage
+- **Unified File Management** - Import from OneDrive, Google Drive, local storage and more (later: real time sync)
 - **AI-Powered Assistance** - LLM agents with RAG capabilities for intelligent document creation
 - **Real-time Collaboration** - Live multi-user editing with change tracking
 - **Visual Document Enhancement** - AI-assisted layout editing and image insertion
@@ -39,22 +38,22 @@ NexDoc.dev enables organizations to create professional documents through real-t
 
 ![System Architecture](media/system-architecture.svg)
 
-See the complete system architecture diagram above showing the multi-tenant platform design with external services, edge routing, authentication, application services, and data storage layers.
+See the complete system architecture diagram above showing the platform design with external services, edge routing, authentication, application services, and data storage layers.
 
 ## Core Components
 
 ### Authentication & Routing
 - **Traefik** - Reverse proxy with automatic HTTPS and request routing
-- **Keycloak** - Enterprise-grade authentication with realm-per-organization isolation
+- **Keycloak** - Enterprise-grade authentication
 
 ### Application Layer
 - **Frontend** - React-based UI with TipTap collaborative editor and Uppy file management
-- **Backend** - Go service built with Yokai framework for API operations and orchestration
+- **Backend** - Python FastAPI for core application logic, handling document creation, user management, and AI interactions
 - **Companion** - Uppy companion server for secure file uploads from cloud providers
 
 ### AI & Search
 - **LiteLLM** - Unified gateway for LLM providers with usage tracking
-- **R2R** - Advanced RAG platform with dedicated per-organization instances that scale to zero when inactive, managed by the Go backend for cost-effective multi-tenant isolation
+- **R2R** - Advanced RAG (hybrid or agentic retrival) platform used for the AI Agent in document creation
 
 ### Storage
 - **PostgreSQL** - Application data and metadata
@@ -62,10 +61,6 @@ See the complete system architecture diagram above showing the multi-tenant plat
 
 ## Architecture Decisions
 
-- **Multi-tenancy via Header Injection** - Traefik middleware adds X-User and X-Organization headers for downstream services
-- **Shared Services with Application-Level Isolation** - Most services handle multi-tenancy through application logic
-- **Smart R2R Routing and Scaling** - Go backend routes AI requests to organization-specific R2R instances based on X-Organization headers, with KEDA auto-scaling that scales inactive instances to zero for cost optimization
-- **Per-Organization RAG Isolation** - Separate R2R instances ensure complete data privacy and performance isolation between organizations
-- **Collaborative Editing via TipTap Cloud** - Leverages proven infrastructure for real-time synchronization
+- **Collaborative Editing via TipTap Cloud** - Leverages proven infrastructure for real-time synchronization (after all users have left, a backup is saved by the backend to the object storage and can be restored later)
 - **Kubernetes-Native Deployment** - Full platform deployed on K3S cluster with auto-scaling and high availability
 - **K3D for Local Development** - Local Kubernetes development environment for testing cluster deployments

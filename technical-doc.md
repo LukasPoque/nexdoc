@@ -4,18 +4,13 @@
 
 NexDoc.dev is a sophisticated multi-tenant document creation platform that bridges the gap between traditional document editing and AI-powered content generation. The system enables organizations to collaboratively create reports by combining file resources from multiple sources with intelligent AI assistance powered by Retrieval-Augmented Generation (RAG).
 
-The platform emphasizes data isolation, scalability, and user experience, providing each organization with dedicated resources while maintaining cost efficiency through intelligent resource management.
-
 ## Architecture Principles
-
-### Multi-Tenancy
-Every organization operates in complete isolation with dedicated authentication realms, RAG instances, and data segregation. This ensures privacy, security, and performance predictability.
 
 ### Microservices Architecture
 Components are loosely coupled, communicating through well-defined APIs and message passing. This enables independent scaling, deployment, and maintenance of each service.
 
 ### Cloud-Native Design
-Built for containerized deployment with automatic scaling, health monitoring, and service discovery. The architecture supports both simple Docker Compose deployments and advanced Kubernetes orchestration.
+Built for containerized deployment with automatic scaling, health monitoring, and service discovery.
 
 ## Tech Stack Components
 
@@ -27,21 +22,20 @@ A modern reverse proxy and load balancer that serves as the entry point for all 
 **Repository:** https://github.com/traefik/traefik
 
 #### keycloakopenid
-A Traefik middleware that validates JWT tokens from Keycloak and enriches requests with X-User and X-Organization headers. This enables stateless authentication throughout the application stack without requiring each service to implement OAuth2 flows.
+A Traefik middleware that validates JWT tokens from Keycloak and enriches requests with additional headers. This enables stateless authentication throughout the application stack without requiring each service to implement OAuth2 flows.
 
 **Repository:** https://github.com/Gwojda/keycloakopenid
 
 ### Authentication
 
 #### Keycloak
-An enterprise-grade identity and access management solution providing OAuth2/OIDC capabilities. Each organization receives a dedicated realm ensuring complete isolation of user data, permissions, and authentication flows. Keycloak handles user registration, password policies, MFA, and social login integrations.
-
+An enterprise-grade identity and access management solution providing OAuth2/OIDC capabilities. 
 **Repository:** https://github.com/keycloak/keycloak
 
 ### Application Services
 
 #### Frontend (React + Vite)
-A modern single-page application built with React 18 and bundled with Vite for optimal development experience and production performance. The frontend provides:
+A modern single-page application built with React and bundled with Vite for optimal development experience and production performance. The frontend provides:
 - Responsive UI with material design principles
 - Real-time collaborative editing interface with TipTap
 - File management and organization tools
@@ -70,18 +64,15 @@ A server-side component that securely handles OAuth flows and file transfers fro
 
 **Repository:** https://github.com/transloadit/uppy (companion is part of the Uppy monorepo)
 
-#### Backend Service (Go + Yokai)
-The core business logic layer built with Go and the Yokai framework, providing:
+#### Backend Service 
+A Python FastAPI application that serves as the core application logic layer. It handles:
 - RESTful API endpoints for frontend operations
 - WebSocket support for real-time updates
-- Multi-tenant request routing and isolation
-- Integration orchestration between services
+- User and organization management
+- Space and document lifecycle management
+- AI request to R2R instance
 - Document lifecycle management
 - Export pipeline coordination
-
-Yokai framework provides structured logging, dependency injection, configuration management, and observability out of the box.
-
-**Yokai Repository:** https://github.com/ankorstore/yokai
 
 #### LiteLLM Gateway
 A unified interface for multiple LLM providers that abstracts API differences and provides:
@@ -93,39 +84,26 @@ A unified interface for multiple LLM providers that abstracts API differences an
 **Repository:** https://github.com/BerriAI/litellm
 
 #### R2R (RAG Platform)
-A comprehensive Retrieval-Augmented Generation platform deployed as completely isolated instances per organization. This architecture is critical for both data privacy and cost optimization:
+A comprehensive Retrieval-Augmented Generation platform that provides:
 
-**Per-Organization Instance Features:**
-- Document ingestion pipeline with OCR and parsing
+- Document ingestion pipeline with VLLM and parsing
 - Vector database for semantic search (PostgreSQL + pgvector)
 - Hybrid search combining keyword and semantic matching
 - Re-ranking models for result optimization
 - Answer generation with citation tracking
 - Knowledge graph construction for complex queries
-
-**Intelligent Routing and Scaling:**
-- Go backend routes AI requests to the correct R2R instance based on X-Organization headers
-- KEDA-based autoscaling monitors request activity per organization
-- **Scale-to-zero capability**: Inactive organizations' R2R instances automatically scale to zero, eliminating compute costs
-- **On-demand scaling**: R2R instances spin up automatically when organizations become active
-- **Cost isolation**: Each organization only pays for their actual usage
-
-This separation ensures complete data isolation while optimizing infrastructure costs through intelligent scaling.
-
-**Repository:** https://github.com/SciPhi-AI/R2R
+- Agemntic retrieval capabilities and tooluse
 
 ### Data Storage
 
 #### PostgreSQL
 The primary relational database storing:
-- User accounts and authentication data
+- User accounts data
 - Organization settings and configurations
 - Document metadata and relationships
 - Space membership and permissions
 - Audit logs and activity tracking
 - System configuration and feature flags
-
-PostgreSQL is chosen for its reliability, ACID compliance, and excellent support for complex queries and JSON data types.
 
 **Repository:** https://github.com/postgres/postgres
 
@@ -146,8 +124,8 @@ An S3-compatible object storage system providing:
 A lightweight Kubernetes distribution that serves as the deployment platform for the entire NexDoc infrastructure. K3S provides:
 - **Full Platform Deployment** - All services deployed as Kubernetes workloads
 - **Shared Service Architecture** - Single instances of Backend, Keycloak, PostgreSQL, MinIO with application-level multi-tenancy
-- **Isolated R2R Instances** - Per-organization R2R deployments with namespace isolation
-- **KEDA Autoscaling** - Event-driven scaling for all services, particularly R2R instances
+- **Shared R2R Instance** - Single R2R deployment with application-level multi-tenancy
+- **KEDA Autoscaling** - Event-driven scaling for all services
 - **Built-in Ingress** - Traefik integration for external traffic routing
 - **Persistent Storage** - StatefulSets for databases and object storage
 - **Service Discovery** - Native Kubernetes DNS for inter-service communication
@@ -233,15 +211,13 @@ Usage-based billing infrastructure that will track:
 ### AI-Assisted Editing Flow
 1. User requests AI assistance within TipTap editor
 2. Frontend (via TipTap) sends request to backend with organization context
-3. **Smart Routing**: Backend uses X-Organization header to identify and route to the specific organization's R2R instance
-4. **Auto-scaling**: If R2R instance is scaled to zero, KEDA automatically spins it up (cold start ~30-60 seconds)
-5. R2R performs retrieval from all files within the space (organization's isolated data)
+3. **Multi-tenant Access**: Backend uses X-Organization header to provide organization context to R2R
+4. R2R performs retrieval from all files within the space (organization's data with application-level isolation)
 6. R2R uses LLMs for search via LiteLLM
 7. LLM generates response with citations from space files
 8. Backend formats response for editor integration
 9. AI suggestions appear as tracked modifications in TipTap
 10. Users can accept, reject, or modify AI suggestions
-11. **Cost Optimization**: After period of inactivity, R2R instance scales back to zero
 
 ### Export and Access Flow
 1. User completes document and requests export
