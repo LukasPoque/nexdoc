@@ -29,7 +29,7 @@ A modern reverse proxy and load balancer that serves as the entry point for all 
 #### keycloakopenid
 A Traefik middleware that validates JWT tokens from Keycloak and enriches requests with X-User and X-Organization headers. This enables stateless authentication throughout the application stack without requiring each service to implement OAuth2 flows.
 
-**Repository:** https://github.com/Brainnwave/keycloakopenid
+**Repository:** https://github.com/Gwojda/keycloakopenid
 
 ### Authentication
 
